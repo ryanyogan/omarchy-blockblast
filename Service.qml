@@ -47,6 +47,7 @@ Item {
       reducedMotion: false,
       leaderboardEnabled: true,
       seenIntro: false,
+      scrimOpacity: 0,
       gamesPlayed: 0
     }
   }
@@ -67,6 +68,8 @@ Item {
     s.reducedMotion = raw.reducedMotion === true
     s.leaderboardEnabled = raw.leaderboardEnabled !== false
     s.seenIntro = raw.seenIntro === true
+    var so = Number(raw.scrimOpacity)
+    s.scrimOpacity = isFinite(so) && so > 0 ? Math.max(0.2, Math.min(1, so)) : 0
     s.gamesPlayed = Math.max(0, raw.gamesPlayed | 0)
     return s
   }
@@ -88,6 +91,8 @@ Item {
   // Off means off: no posting, no fetching, no verifying. Nothing leaves.
   readonly property bool leaderboardEnabled: state.leaderboardEnabled !== false
   readonly property bool seenIntro: state.seenIntro === true
+  // 0 means "use the theme default". Otherwise 0.2..1.
+  readonly property real scrimOpacity: Number(state.scrimOpacity) || 0
   readonly property var savedGame: state.game
 
   // ---------------------------------------------------------------- game hooks
@@ -97,6 +102,7 @@ Item {
   function setReducedMotion(on) { update(function(s) { s.reducedMotion = on === true }) }
   function setLeaderboardEnabled(on) { update(function(s) { s.leaderboardEnabled = on === true; if (!s.leaderboardEnabled) s.pending = [] }) }
   function markIntroSeen() { update(function(s) { s.seenIntro = true }) }
+  function setScrimOpacity(v) { update(function(s) { s.scrimOpacity = v }) }
   function setApiBase(url) { update(function(s) { s.apiBase = String(url || "").trim() }) }
 
   // A finished run. Records it locally, then posts it if there is a tag.

@@ -34,16 +34,19 @@ Item {
     transformOrigin: Item.Center
   }
 
-  // Line-about-to-clear pulse: a bright veil that breathes.
+  // Line-about-to-clear pulse: a bright veil that breathes while there is
+  // input, and holds steady once the hands are still.
   Rectangle {
+    id: veil
     anchors.fill: parent
     radius: Math.max(3, cell.side * 0.2)
     color: cell.ui.light ? Qt.rgba(1, 1, 1, 0.55) : Qt.rgba(1, 1, 1, 0.34)
     visible: cell.willClear && cell.filled
     opacity: cell.willClear ? 0.85 : 0
     SequentialAnimation on opacity {
-      running: cell.willClear && cell.ui.animated
+      running: cell.willClear && cell.ui.ambient
       loops: Animation.Infinite
+      onRunningChanged: if (!running) veil.opacity = cell.willClear ? 0.85 : 0
       NumberAnimation { to: 0.25; duration: 420; easing.type: Easing.InOutSine }
       NumberAnimation { to: 0.85; duration: 420; easing.type: Easing.InOutSine }
     }

@@ -92,10 +92,12 @@ Item {
           anchors.fill: parent
           opacity: slot.piece ? (slot.fitsSomewhere ? 1 : 0.28) : 0
           Behavior on opacity { NumberAnimation { duration: 220 } }
-          // The selected piece bobs, gently, so the eye finds it.
+          // The selected piece bobs, gently, so the eye finds it. Ambient:
+          // stops flat when input goes quiet or the tray is hidden.
           SequentialAnimation on y {
-            running: slot.active && tray.ui.animated
+            running: slot.active && tray.ui.ambient && tray.visible
             loops: Animation.Infinite
+            onRunningChanged: if (!running) body.y = 0
             NumberAnimation { to: -3; duration: 800; easing.type: Easing.InOutSine }
             NumberAnimation { to: 0; duration: 800; easing.type: Easing.InOutSine }
           }

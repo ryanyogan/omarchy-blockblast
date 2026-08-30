@@ -177,11 +177,13 @@ Item {
       Behavior on y { enabled: board.ui.animated; NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
       z: 5
 
-      // A soft breath so the ghost reads as "not placed yet".
+      // A soft breath so the ghost reads as "not placed yet". Ambient: it
+      // stops (and settles at full strength) when input goes quiet.
       opacity: 1
       SequentialAnimation on opacity {
-        running: ghost.visible && board.ui.animated
+        running: ghost.visible && board.ui.ambient
         loops: Animation.Infinite
+        onRunningChanged: if (!running) ghost.opacity = 1
         NumberAnimation { to: 0.72; duration: 900; easing.type: Easing.InOutSine }
         NumberAnimation { to: 1; duration: 900; easing.type: Easing.InOutSine }
       }

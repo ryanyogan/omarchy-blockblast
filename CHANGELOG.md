@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- Leaderboard redesigned: proportional type, medals, zebra rows, period pills
+- One gliding ghost piece instead of per-cell ghosts; settle glow on landings; the selected tray piece bobs
+- First-launch intro card; help explains the vim-motion goal and exactly what the server keeps
+- `:leaderboard off` turns off all networking; `:opacity 20-100` sets the background dimming
+- Ambient motion now sleeps five seconds after the last keypress: an open, untouched board costs ~0.4% of a core instead of ~6-9%
+
 ## 1.0.0
 
 First release. 🧱

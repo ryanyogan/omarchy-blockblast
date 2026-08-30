@@ -47,9 +47,17 @@ Item {
 
   readonly property bool reducedMotion: service ? service.reducedMotion === true : false
 
+  // Ambient motion (the ghost's breathing, the tray bob, the clear pulse)
+  // runs only in the seconds after input. After that the scene goes still and
+  // the shell stops burning frames on a game nobody is touching.
+  property bool restless: true
+  Timer { id: restTimer; interval: 5000; onTriggered: root.restless = false }
+  function wake() { restless = true; restTimer.restart() }
+
   readonly property QtObject ui: QtObject {
     readonly property bool light: Palette.mode(root.paletteToml) === "light"
     readonly property bool animated: root.opened && !root.reducedMotion
+    readonly property bool ambient: animated && root.restless
     readonly property color fg: Color.foreground
     readonly property color bg: Color.background
     readonly property color accent: Color.accent
@@ -64,7 +72,11 @@ Item {
     readonly property color selectedFill: Util.alpha(Color.accent, 0.14)
     readonly property color ghostBadFill: Util.alpha(Color.urgent, 0.22)
     readonly property color card: light ? Palette.lighten(Color.background, 0.03) : Palette.lighten(Color.background, 0.035)
-    readonly property color scrim: Util.alpha(Color.background, light ? 0.90 : 0.86)
+    readonly property real scrimAlpha: {
+      var set = root.service ? root.service.scrimOpacity : 0
+      return set > 0 ? set : (light ? 0.90 : 0.86)
+    }
+    readonly property color scrim: Util.alpha(Color.background, scrimAlpha)
     readonly property var blocks: Palette.blockColors(root.paletteToml, Color.accent)
     readonly property color stripe: Util.alpha(Color.foreground, 0.03)
     readonly property string font: Style.font.family
@@ -390,6 +402,16 @@ Item {
     case "motion":
       if (service) service.setReducedMotion(arg === "off" || arg === "0" || arg === "false")
       showToast("Motion " + (root.reducedMotion ? "off" : "on"), false); return
+    case "opacity": case "scrim": case "bg": {
+      if (!arg) { showToast("Background is at " + Math.round(ui.scrimAlpha * 100) + "%. :opacity 20-100, or default", false); return }
+      if (arg === "default" || arg === "reset") { if (service) service.setScrimOpacity(0); showToast("Background opacity back to the theme default", false); return }
+      var n = Number(arg)
+      if (isFinite(n) && n > 1) n = n / 100
+      if (!isFinite(n) || n < 0.2 || n > 1) { showToast("Opacity is 20 to 100 (or 0.2 to 1)", true); return }
+      if (service) service.setScrimOpacity(n)
+      showToast("Background opacity " + Math.round(n * 100) + "%", false)
+      return
+    }
     case "api":
       if (service) service.setApiBase(arg)
       showToast(arg ? "API: " + arg : "API reset to default", false); return
@@ -410,6 +432,7 @@ Item {
   // ---------------------------------------------------------------- keys
 
   function handleKey(event) {
+    wake()
     var k = event.key
     var t = event.text
     var shift = event.modifiers & Qt.ShiftModifier
@@ -518,6 +541,7 @@ Item {
     try { payload = JSON.parse(payloadJson || "{}") || {} } catch (e) { payload = {} }
     if (!opened) {
       opened = true
+      wake()
       toast = ""
       cmdMode = false
       if (service) { service.refresh(); waitForState.start() }
@@ -883,6 +907,7 @@ Item {
           leaderboardOn: root.leaderboardOn
           motionOn: !root.reducedMotion
           tag: root.tag
+          scrimPct: Math.round(root.ui.scrimAlpha * 100)
         }
       }
 

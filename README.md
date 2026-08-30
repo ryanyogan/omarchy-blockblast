@@ -34,7 +34,7 @@ Drop pieces anywhere they fit. Fill a row or a column and it clears. No gravity.
 
 **Scoring.** One point per block. A clear pays 10, two lines at once 30, three 60, four 100. Every consecutive clearing move adds one to your combo, and the combo multiplies the clear. Empty the board for 300 on top.
 
-**Commands.** `:tag NAME` claims a gamer tag. `:new`, `:motion off`, `:api URL`, `:logout`, `:q`.
+**Commands.** `:tag NAME` claims a gamer tag. `:leaderboard off` turns off all networking, `:opacity 20-100` sets how much the background dims (`:opacity default` resets), `:motion off` stills the animations, plus `:new`, `:api URL`, `:logout`, `:q`.
 
 ## Leaderboard
 
@@ -70,6 +70,10 @@ Run it locally with `npm run db:local && npm run dev`, then `:api http://localho
 | `GET /v1/players/:tag` | profile |
 | `POST /v1/scores` `{token, score, ...}` | post a finished run |
 | `GET /v1/leaderboard?period=all\|week\|day` | the board |
+
+## Performance
+
+Closed, Blast does not exist: the shell unloads the overlay and the service holds no timers, processes, or sockets. Open, ambient motion (the ghost's breathing, the tray bob, the clear pulse) runs only for five seconds after your last keypress, then the scene goes still, so an idle board costs roughly nothing. `:motion off` removes motion entirely.
 
 ## Development
 

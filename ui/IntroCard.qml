@@ -68,6 +68,7 @@ Item {
       color: intro.ui.dim
     }
     Text {
+      id: pressEnter
       anchors.horizontalCenter: parent.horizontalCenter
       text: "press enter to play"
       font.family: intro.ui.font
@@ -75,8 +76,9 @@ Item {
       font.weight: Font.Bold
       color: intro.ui.accent
       SequentialAnimation on opacity {
-        running: intro.visible && intro.ui.animated
+        running: intro.visible && intro.ui.ambient
         loops: Animation.Infinite
+        onRunningChanged: if (!running) pressEnter.opacity = 1
         NumberAnimation { to: 0.4; duration: 700; easing.type: Easing.InOutSine }
         NumberAnimation { to: 1; duration: 700; easing.type: Easing.InOutSine }
       }

@@ -212,22 +212,22 @@ function clampAnchor(piece, row, col) {
 // Rows and columns that would be full if `cells` were filled, as they would
 // be after a placement. Used for the live preview and for the real clear.
 function fullLines(board, extraCells) {
-  var b = board
-  if (extraCells && extraCells.length) {
-    b = board.slice()
-    for (var i = 0; i < extraCells.length; i++) b[extraCells[i]] = 1
+  // Fill counts per row and column; the extra cells (a piece preview) are
+  // added on top without copying the board. Runs on every cursor move.
+  var rowN = [0, 0, 0, 0, 0, 0, 0, 0]
+  var colN = [0, 0, 0, 0, 0, 0, 0, 0]
+  for (var i = 0; i < SIZE * SIZE; i++) {
+    if (board[i]) { rowN[(i / SIZE) | 0]++; colN[i % SIZE]++ }
+  }
+  if (extraCells) {
+    for (var e = 0; e < extraCells.length; e++) {
+      var cell = extraCells[e]
+      if (!board[cell]) { rowN[(cell / SIZE) | 0]++; colN[cell % SIZE]++ }
+    }
   }
   var rows = [], cols = []
-  for (var r = 0; r < SIZE; r++) {
-    var full = true
-    for (var c = 0; c < SIZE; c++) if (!b[idx(r, c)]) { full = false; break }
-    if (full) rows.push(r)
-  }
-  for (var c2 = 0; c2 < SIZE; c2++) {
-    var fullC = true
-    for (var r2 = 0; r2 < SIZE; r2++) if (!b[idx(r2, c2)]) { fullC = false; break }
-    if (fullC) cols.push(c2)
-  }
+  for (var r = 0; r < SIZE; r++) if (rowN[r] === SIZE) rows.push(r)
+  for (var c = 0; c < SIZE; c++) if (colN[c] === SIZE) cols.push(c)
   return { rows: rows, cols: cols }
 }
 

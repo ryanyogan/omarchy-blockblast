@@ -8,6 +8,7 @@ Item {
   property bool leaderboardOn: true
   property bool motionOn: true
   property string tag: ""
+  property int scrimPct: 86
   property int scroll: 0
 
   readonly property int step: ui.space(60)
@@ -35,6 +36,7 @@ Item {
     [":tag NAME", "claim a gamer tag, or change it"],
     [":leaderboard on|off", "post runs and show the board, or never touch the network"],
     [":motion on|off", "animations"],
+    [":opacity 20-100", "background dimming behind the game (:opacity default resets)"],
     [":logout", "forget the tag on this machine"],
     [":api URL", "point at a different leaderboard server"],
     [":new", "start over"],
@@ -119,6 +121,8 @@ Item {
       Text { text: help.motionOn ? "on" : "off"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.motionOn ? help.ui.accent : help.ui.dim }
       Text { text: "Gamer tag"; font.family: help.ui.sans; font.pixelSize: help.ui.fontBody; color: help.ui.fg }
       Text { text: help.tag ? "@" + help.tag : "none"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.tag ? help.ui.accent : help.ui.dim }
+      Text { text: "Background opacity"; font.family: help.ui.sans; font.pixelSize: help.ui.fontBody; color: help.ui.fg }
+      Text { text: help.scrimPct + "%"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.ui.accent }
     }
 
     Text { text: "PRIVACY"; font.family: help.ui.font; font.pixelSize: help.ui.fontSmall; font.letterSpacing: 3; color: help.ui.dim }
