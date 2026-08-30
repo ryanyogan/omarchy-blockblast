@@ -4,7 +4,10 @@ Type=Application
 Name=Blast
 GenericName=Block puzzle
 Comment=Block Blast with vim keys and a global leaderboard
-Exec=omarchy-shell shell toggle ryanyogan.blast '{}'
+# The game is a shell overlay, not a window, so the shell's "Launching…"
+# feedback would never see it appear. It shows 2s after launch; close it
+# just after. Harmless when it never opened.
+Exec=sh -c "omarchy-shell shell toggle ryanyogan.blast; sleep 2.6; omarchy-shell osd close"
 Icon=blast
 Terminal=false
 Categories=Game;LogicGame;
