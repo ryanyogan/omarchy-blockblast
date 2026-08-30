@@ -56,7 +56,7 @@ Drop pieces anywhere they fit. Fill a row or a column and it clears. No gravity.
 
 Press `r` at game over (or `:tag NAME` any time) to pick a gamer tag. That is the whole sign-up: the tag and your scores are all the server keeps. No email, no logging, nothing tracked. `:logout` forgets the tag on this machine.
 
-The scoreboard also lives on the web at the Worker's URL.
+The scoreboard lives on the web too: [blockblast.yogan.dev](https://blockblast.yogan.dev).
 
 ## Theming
 

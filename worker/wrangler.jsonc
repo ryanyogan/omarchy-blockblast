@@ -4,6 +4,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-08-20",
   "observability": { "enabled": false },
+  "routes": [
+    { "pattern": "blockblast.yogan.dev", "custom_domain": true }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

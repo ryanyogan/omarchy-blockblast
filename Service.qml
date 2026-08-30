@@ -24,7 +24,7 @@ Item {
 
   // The API this build talks to. Overridable with BLAST_API in the shell's
   // environment or `:api URL` inside the game (saved to the state file).
-  readonly property string builtinApi: "https://blast-leaderboard.ryanyogan.workers.dev"
+  readonly property string builtinApi: "https://blockblast.yogan.dev"
   readonly property string apiBase: {
     var saved = String(state.apiBase || "").replace(/\/+$/, "")
     if (saved) return saved
