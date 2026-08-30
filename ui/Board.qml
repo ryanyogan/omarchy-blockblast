@@ -7,9 +7,12 @@ Item {
   id: board
   required property var ui
   property var cells: []              // 64 ints
-  property var ghostCells: []         // board indices under the cursor piece
+  property var ghostPiece: null       // piece under the cursor, or null
+  property int ghostRow: 0
+  property int ghostCol: 0
   property bool ghostValid: true
   property color ghostColor: ui.accent
+  property var ghostBadCells: []      // indices the ghost overlaps when invalid
   property var clearCells: []         // indices that would clear on drop
   property real side: 400
   property bool dimmed: false
@@ -155,10 +158,49 @@ Item {
           ui: board.ui
           side: board.cellSide
           value: board.cells[index] || 0
-          ghost: board.ghostCells.indexOf(index) !== -1
-          ghostBad: !board.ghostValid
-          ghostColor: board.ghostColor
+          blocked: !board.ghostValid && board.ghostBadCells.indexOf(index) !== -1
           willClear: board.ghostValid && board.clearCells.indexOf(index) !== -1
+        }
+      }
+    }
+
+    // The ghost: one item that glides to the cursor instead of 64 cells
+    // flipping on and off, so moving feels like sliding a piece.
+    Item {
+      id: ghost
+      visible: !!board.ghostPiece
+      x: board.ghostCol * (board.cellSide + board.gap)
+      y: board.ghostRow * (board.cellSide + board.gap)
+      width: board.ghostPiece ? board.ghostPiece.cols * (board.cellSide + board.gap) - board.gap : 0
+      height: board.ghostPiece ? board.ghostPiece.rows * (board.cellSide + board.gap) - board.gap : 0
+      Behavior on x { enabled: board.ui.animated; NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+      Behavior on y { enabled: board.ui.animated; NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+      z: 5
+
+      // A soft breath so the ghost reads as "not placed yet".
+      opacity: 1
+      SequentialAnimation on opacity {
+        running: ghost.visible && board.ui.animated
+        loops: Animation.Infinite
+        NumberAnimation { to: 0.72; duration: 900; easing.type: Easing.InOutSine }
+        NumberAnimation { to: 1; duration: 900; easing.type: Easing.InOutSine }
+      }
+
+      Repeater {
+        model: board.ghostPiece ? board.ghostPiece.cells.length : 0
+        delegate: Rectangle {
+          required property int index
+          readonly property var cell: board.ghostPiece.cells[index]
+          x: cell[1] * (board.cellSide + board.gap) + Math.max(1, board.cellSide * 0.06)
+          y: cell[0] * (board.cellSide + board.gap) + Math.max(1, board.cellSide * 0.06)
+          width: board.cellSide - Math.max(1, board.cellSide * 0.06) * 2
+          height: width
+          radius: Math.max(3, board.cellSide * 0.18)
+          color: board.ghostValid ? Qt.rgba(board.ghostColor.r, board.ghostColor.g, board.ghostColor.b, 0.42) : board.ui.ghostBadFill
+          border.width: 2
+          border.color: board.ghostValid ? board.ghostColor : board.ui.urgent
+          Behavior on color { ColorAnimation { duration: 120 } }
+          Behavior on border.color { ColorAnimation { duration: 120 } }
         }
       }
     }

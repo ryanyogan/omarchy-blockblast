@@ -54,7 +54,7 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       wrapMode: Text.WordWrap
       text: "It goes on the global leaderboard next to your scores. Nothing else is collected."
-      font.family: prompt.ui.font
+      font.family: prompt.ui.sans
       font.pixelSize: prompt.ui.fontBody
       color: prompt.ui.fg
     }

@@ -9,11 +9,13 @@ Item {
   property bool posting: false
   property string postError: ""
   property bool hasTag: false
+  property bool leaderboardOn: true
   property int best: 0
 
   readonly property bool newBest: rec && rec.localBest === true
   readonly property string rankLine: {
     if (!rec) return ""
+    if (!leaderboardOn) return "Leaderboard is off. Saved here only."
     if (!hasTag) return "Not posted. Press  r  to claim a gamer tag and post it."
     if (posting) return "posting…"
     if (postError) return "Saved for later: " + postError
@@ -70,7 +72,7 @@ Item {
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
         text: card.rec ? (card.rec.lines + " lines  ·  combo x" + card.rec.maxCombo + "  ·  " + card.rec.moves + " moves  ·  best " + Game.fmt(card.best)) : ""
-        font.family: card.ui.font
+        font.family: card.ui.sans
         font.pixelSize: card.ui.fontBody
         color: card.ui.dim
       }

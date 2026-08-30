@@ -8,7 +8,7 @@
     {
       "binding": "DB",
       "database_name": "blast-leaderboard",
-      "database_id": "REPLACE_WITH_D1_ID",
+      "database_id": "66c384a0-d666-4cc4-88a4-dd644db6bdea",
       "migrations_dir": "migrations"
     }
   ]

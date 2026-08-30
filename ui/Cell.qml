@@ -8,9 +8,7 @@ Item {
   required property var ui
   property int value: 0
   property real side: 40
-  property bool ghost: false
-  property bool ghostBad: false
-  property color ghostColor: ui.accent
+  property bool blocked: false        // a filled cell the ghost would overlap
   property bool willClear: false
   readonly property bool filled: value > 0
 
@@ -51,15 +49,25 @@ Item {
     }
   }
 
-  // Ghost of the piece at the cursor.
+  // The block the ghost is bumping into.
   Rectangle {
     anchors.fill: parent
-    anchors.margins: Math.max(1, cell.side * 0.06)
-    radius: Math.max(3, cell.side * 0.18)
-    visible: cell.ghost
-    color: cell.ghostBad ? cell.ui.ghostBadFill : Qt.rgba(cell.ghostColor.r, cell.ghostColor.g, cell.ghostColor.b, cell.filled ? 0.25 : 0.42)
+    radius: Math.max(3, cell.side * 0.2)
+    color: cell.ui.ghostBadFill
+    visible: cell.blocked && cell.filled
+  }
+
+  // Settle glow: a ring that blooms and fades right after a landing.
+  Rectangle {
+    id: glow
+    anchors.centerIn: parent
+    width: cell.side; height: cell.side
+    radius: Math.max(3, cell.side * 0.2)
+    color: "transparent"
     border.width: 2
-    border.color: cell.ghostBad ? cell.ui.urgent : cell.ghostColor
+    border.color: "white"
+    opacity: 0
+    scale: 1
   }
 
   // Burst used when this cell clears. Keeps its own color copy since the
@@ -93,6 +101,14 @@ Item {
     ParallelAnimation {
       NumberAnimation { target: block; property: "scale"; to: 1.0; duration: 260; easing.type: Easing.OutBack; easing.overshoot: 2.4 }
       NumberAnimation { target: block; property: "opacity"; to: 1.0; duration: 120 }
+      SequentialAnimation {
+        PropertyAction { target: glow; property: "scale"; value: 0.9 }
+        PropertyAction { target: glow; property: "opacity"; value: 0.7 }
+        ParallelAnimation {
+          NumberAnimation { target: glow; property: "scale"; to: 1.45; duration: 380; easing.type: Easing.OutCubic }
+          NumberAnimation { target: glow; property: "opacity"; to: 0; duration: 380 }
+        }
+      }
     }
   }
 

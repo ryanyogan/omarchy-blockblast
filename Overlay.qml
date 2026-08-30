@@ -66,7 +66,16 @@ Item {
     readonly property color card: light ? Palette.lighten(Color.background, 0.03) : Palette.lighten(Color.background, 0.035)
     readonly property color scrim: Util.alpha(Color.background, light ? 0.90 : 0.86)
     readonly property var blocks: Palette.blockColors(root.paletteToml, Color.accent)
+    readonly property color stripe: Util.alpha(Color.foreground, 0.03)
     readonly property string font: Style.font.family
+    // Prose and lists read better in a proportional face. Falls back to
+    // whatever "sans-serif" resolves to if Noto Sans is not installed.
+    readonly property string sans: "Noto Sans"
+    // Spacing tokens. Everything lays out on these four.
+    readonly property int pad: Style.space(32)
+    readonly property int gutter: Style.space(24)
+    readonly property int section: Style.space(16)
+    readonly property int row: Style.space(8)
     readonly property int fontSmall: Style.font.bodySmall
     readonly property int fontBody: Style.font.body
     readonly property int fontSubtitle: Style.font.subtitle
@@ -101,6 +110,12 @@ Item {
   readonly property bool playing: !!game && !game.over
   readonly property var piece: game && slot >= 0 && slot < 3 ? game.tray[slot] : null
   readonly property var ghostCells: piece ? Game.cellsOf(piece, cursorRow, cursorCol) : []
+  readonly property var ghostBadCells: {
+    if (!piece || ghostValid) return []
+    var out = []
+    for (var i = 0; i < ghostCells.length; i++) if (game.board[ghostCells[i]]) out.push(ghostCells[i])
+    return out
+  }
   readonly property bool ghostValid: piece ? Game.canPlace(game.board, piece, cursorRow, cursorCol) : true
   readonly property color ghostColor: piece ? ui.blocks[(piece.color - 1) % ui.blocks.length] : ui.accent
   readonly property var clearCells: {
@@ -117,6 +132,7 @@ Item {
     return game && game.score > saved ? game.score : saved
   }
   readonly property string tag: service ? service.tag : ""
+  readonly property bool leaderboardOn: service ? service.leaderboardEnabled !== false : true
 
   function startGame(resume) {
     var saved = resume && service ? service.savedGame : null
@@ -135,6 +151,13 @@ Item {
     if (service) service.saveGame(Game.serialize(g))
     if (!saved || saved.moves === 0) tray.arrive()
     if (g.over) finish()
+    else if (service && !service.seenIntro) { pane = "intro"; intro.reveal() }
+  }
+
+  function dismissIntro() {
+    if (service) service.markIntroSeen()
+    pane = basePane()
+    showToast("hjkl to move, enter to drop. ? for help", false)
   }
 
   // Game.place mutates in place; hand QML a fresh object so bindings on
@@ -251,7 +274,7 @@ Item {
     game.over = true
     bump()
     pane = "over"
-    posting = !!(service && service.hasTag)
+    posting = !!(service && service.hasTag && leaderboardOn)
     postError = ""
     overRec = service ? service.finishGame(game, function(rec, err) {
       if (rec) overRec = rec
@@ -280,6 +303,7 @@ Item {
 
   function openBoard() {
     pane = "board"
+    if (!leaderboardOn) return
     fetchBoard()
     if (service && service.hasTag) service.verify(function(res, err) {
       if (res && res.ok) { leaderboard.myRank = res.rank | 0; leaderboard.myBest = res.best | 0 }
@@ -302,6 +326,7 @@ Item {
   }
 
   function openTag(returnTo) {
+    if (!leaderboardOn) { showToast("Leaderboard is off. :leaderboard on to post runs", true); return }
     tagReturnPane = returnTo || ""
     tagPrompt.reset(tag)
     tagPrompt.busy = false
@@ -357,6 +382,11 @@ Item {
     case "logout": case "forget":
       if (service) service.forget()
       showToast("Tag forgotten on this machine", false); return
+    case "leaderboard": case "board-on": case "online":
+      if (service) service.setLeaderboardEnabled(!(arg === "off" || arg === "0" || arg === "false" || arg === "no"))
+      showToast(root.leaderboardOn ? "Leaderboard on" : "Leaderboard off. Nothing leaves this machine", false)
+      if (pane === "board") openBoard()
+      return
     case "motion":
       if (service) service.setReducedMotion(arg === "off" || arg === "0" || arg === "false")
       showToast("Motion " + (root.reducedMotion ? "off" : "on"), false); return
@@ -385,6 +415,11 @@ Item {
     var shift = event.modifiers & Qt.ShiftModifier
 
     if (pane === "tag" || cmdMode) return     // those inputs own the keyboard
+    if (pane === "intro") {
+      if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space || k === Qt.Key_Escape || t === "q") dismissIntro()
+      else if (t === "?") { dismissIntro(); pane = "help" }
+      event.accepted = true; return
+    }
 
     // Global.
     if (k === Qt.Key_Escape) {
@@ -408,7 +443,13 @@ Item {
       else if (t === "g") { if (pendingG) { leaderboard.top(); pendingG = false } else { pendingG = true; gTimer.restart() } }
       event.accepted = true; return
     }
-    if (pane === "help") { event.accepted = true; return }
+    if (pane === "help") {
+      if (t === "j") helpPane.down()
+      else if (t === "k") helpPane.up()
+      else if (t === "G") helpPane.bottom()
+      else if (t === "g") { if (pendingG) { helpPane.top(); pendingG = false } else { pendingG = true; gTimer.restart() } }
+      event.accepted = true; return
+    }
     if (pane === "over") {
       if (t === "r") openTag("over")
       event.accepted = true; return
@@ -578,8 +619,8 @@ Item {
       Keys.onPressed: function(event) { root.handleKey(event) }
       MouseArea { anchors.fill: parent; onClicked: content.forceActiveFocus() }
 
-      readonly property real pad: root.ui.space(32)
-      readonly property real sideWidth: root.ui.space(330)
+      readonly property real pad: root.ui.pad
+      readonly property real sideWidth: root.ui.space(360)
       readonly property real boardSide: Math.min(height - pad * 2 - header.height - footer.height - root.ui.space(24), width - pad * 3 - sideWidth)
 
       // Header: wordmark and the tag.
@@ -621,7 +662,7 @@ Item {
         Text {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
-          text: (root.tag ? "@" + root.tag + "   ·   " : "") + "t leaderboard   ·   ? help"
+          text: (root.tag && root.leaderboardOn ? "@" + root.tag + "   ·   " : "") + (root.leaderboardOn ? "t leaderboard   ·   " : "offline   ·   ") + "? help"
           font.family: root.ui.font
           font.pixelSize: root.ui.fontSmall
           color: root.ui.dim
@@ -643,25 +684,29 @@ Item {
           anchors.centerIn: parent
           side: content.boardSide
           cells: root.cells
-          ghostCells: root.pane ? [] : root.ghostCells
+          ghostPiece: root.pane ? null : root.piece
+          ghostRow: root.cursorRow
+          ghostCol: root.cursorCol
           ghostValid: root.ghostValid
           ghostColor: root.ghostColor
+          ghostBadCells: root.pane ? [] : root.ghostBadCells
           clearCells: root.clearCells
-          dimmed: root.pane === "over" || root.pane === "tag"
+          dimmed: root.pane === "over" || root.pane === "tag" || root.pane === "intro"
         }
 
         // Backdrop for the cards that sit over the board.
         Rectangle {
           anchors.centerIn: parent
           width: parent.width + root.ui.space(16)
-          height: Math.min(parent.height, root.ui.space(300))
+          height: Math.min(parent.height, root.pane === "intro" ? root.ui.space(420) : root.ui.space(300))
           radius: root.ui.space(18)
-          color: Util.alpha(root.ui.card, 0.94)
+          color: Util.alpha(root.ui.card, 0.95)
           border.width: 1
           border.color: root.ui.hairline
-          visible: root.pane === "over" || root.pane === "tag"
-          opacity: visible ? 1 : 0
+          visible: opacity > 0
+          opacity: root.pane === "over" || root.pane === "tag" || root.pane === "intro" ? 1 : 0
           Behavior on opacity { NumberAnimation { duration: 200 } }
+          Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
         }
 
         // Combo banner bursts over the board.
@@ -731,12 +776,24 @@ Item {
           id: gameOver
           ui: root.ui
           anchors.fill: parent
-          visible: root.pane === "over"
+          visible: opacity > 0
+          opacity: root.pane === "over" ? 1 : 0
+          Behavior on opacity { NumberAnimation { duration: 180 } }
           rec: root.overRec
           posting: root.posting
           postError: root.postError
           hasTag: !!root.tag
+          leaderboardOn: root.leaderboardOn
           best: root.bestScore
+        }
+
+        IntroCard {
+          id: intro
+          ui: root.ui
+          anchors.fill: parent
+          visible: opacity > 0
+          opacity: root.pane === "intro" ? 1 : 0
+          Behavior on opacity { NumberAnimation { duration: 180 } }
         }
 
         TagPrompt {
@@ -757,16 +814,17 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: content.pad
         anchors.top: header.bottom
-        anchors.topMargin: root.ui.space(12)
+        anchors.topMargin: root.ui.section
         anchors.bottom: footer.top
-        anchors.bottomMargin: root.ui.space(12)
+        anchors.bottomMargin: root.ui.section
         width: content.sideWidth
 
         Column {
           anchors.fill: parent
-          spacing: root.ui.space(26)
-          visible: root.pane !== "board" && root.pane !== "help"
-          opacity: visible ? 1 : 0
+          spacing: root.ui.gutter
+          visible: opacity > 0
+          opacity: root.pane !== "board" && root.pane !== "help" ? 1 : 0
+          Behavior on opacity { NumberAnimation { duration: 160 } }
 
           ScorePanel {
             id: scorePanel
@@ -781,10 +839,10 @@ Item {
           }
 
           Column {
-            spacing: root.ui.space(8)
+            spacing: root.ui.row
             Text { text: "TRAY"; font.family: root.ui.font; font.pixelSize: root.ui.fontSmall; font.letterSpacing: 2; color: root.ui.dim }
             Row {
-              spacing: root.ui.space(10)
+              spacing: root.ui.row
               Tray {
                 id: tray
                 ui: root.ui
@@ -809,13 +867,22 @@ Item {
           id: leaderboard
           ui: root.ui
           anchors.fill: parent
-          visible: root.pane === "board"
+          visible: opacity > 0
+          opacity: root.pane === "board" ? 1 : 0
+          Behavior on opacity { NumberAnimation { duration: 160 } }
           myTag: root.tag
+          enabled: root.leaderboardOn
         }
         HelpPane {
+          id: helpPane
           ui: root.ui
           anchors.fill: parent
-          visible: root.pane === "help"
+          visible: opacity > 0
+          opacity: root.pane === "help" ? 1 : 0
+          Behavior on opacity { NumberAnimation { duration: 160 } }
+          leaderboardOn: root.leaderboardOn
+          motionOn: !root.reducedMotion
+          tag: root.tag
         }
       }
 
@@ -880,8 +947,9 @@ Item {
           text: root.toast ? root.toast
             : root.pane === "over" ? "n new game   ·   t leaderboard   ·   r gamer tag   ·   : command   ·   q quit"
             : root.pane === "tag" ? "enter claim   ·   esc skip"
-            : root.pane === "board" ? "h l period   ·   j k scroll   ·   r refresh   ·   esc back"
-            : root.pane === "help" ? "esc back"
+            : root.pane === "board" ? "h l switch period   ·   j k scroll   ·   r refresh   ·   esc back"
+            : root.pane === "help" ? "j k scroll   ·   gg G top / bottom   ·   esc back"
+            : root.pane === "intro" ? "enter to play   ·   ? for help"
             : "hjkl move   ·   1 2 3 pick   ·   w b cycle   ·   enter drop   ·   n new   ·   : command"
           font.family: root.ui.font
           font.pixelSize: root.ui.fontSmall

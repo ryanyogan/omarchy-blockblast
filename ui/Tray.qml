@@ -92,6 +92,13 @@ Item {
           anchors.fill: parent
           opacity: slot.piece ? (slot.fitsSomewhere ? 1 : 0.28) : 0
           Behavior on opacity { NumberAnimation { duration: 220 } }
+          // The selected piece bobs, gently, so the eye finds it.
+          SequentialAnimation on y {
+            running: slot.active && tray.ui.animated
+            loops: Animation.Infinite
+            NumberAnimation { to: -3; duration: 800; easing.type: Easing.InOutSine }
+            NumberAnimation { to: 0; duration: 800; easing.type: Easing.InOutSine }
+          }
           PieceView {
             anchors.centerIn: parent
             ui: tray.ui

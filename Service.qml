@@ -45,6 +45,8 @@ Item {
       pending: [],                // finished games not yet posted
       apiBase: "",
       reducedMotion: false,
+      leaderboardEnabled: true,
+      seenIntro: false,
       gamesPlayed: 0
     }
   }
@@ -63,6 +65,8 @@ Item {
     if (Array.isArray(raw.pending)) s.pending = raw.pending.filter(function(p) { return p && typeof p === "object" }).slice(0, 50)
     if (typeof raw.apiBase === "string") s.apiBase = raw.apiBase
     s.reducedMotion = raw.reducedMotion === true
+    s.leaderboardEnabled = raw.leaderboardEnabled !== false
+    s.seenIntro = raw.seenIntro === true
     s.gamesPlayed = Math.max(0, raw.gamesPlayed | 0)
     return s
   }
@@ -81,6 +85,9 @@ Item {
   readonly property string tag: hasTag ? state.player.tag : ""
   readonly property int bestScore: state.best ? state.best.score : 0
   readonly property bool reducedMotion: state.reducedMotion === true
+  // Off means off: no posting, no fetching, no verifying. Nothing leaves.
+  readonly property bool leaderboardEnabled: state.leaderboardEnabled !== false
+  readonly property bool seenIntro: state.seenIntro === true
   readonly property var savedGame: state.game
 
   // ---------------------------------------------------------------- game hooks
@@ -88,6 +95,8 @@ Item {
   function saveGame(serialized) { update(function(s) { s.game = serialized }) }
   function clearGame() { update(function(s) { s.game = null }) }
   function setReducedMotion(on) { update(function(s) { s.reducedMotion = on === true }) }
+  function setLeaderboardEnabled(on) { update(function(s) { s.leaderboardEnabled = on === true; if (!s.leaderboardEnabled) s.pending = [] }) }
+  function markIntroSeen() { update(function(s) { s.seenIntro = true }) }
   function setApiBase(url) { update(function(s) { s.apiBase = String(url || "").trim() }) }
 
   // A finished run. Records it locally, then posts it if there is a tag.
@@ -104,10 +113,10 @@ Item {
       s.gamesPlayed += 1
       if (isBest) s.best = { score: rec.score, lines: rec.lines, maxCombo: rec.maxCombo, at: rec.at }
       s.history = [rec].concat(s.history).slice(0, 50)
-      if (s.player && rec.moves > 0) s.pending = s.pending.concat([rec])
+      if (s.player && s.leaderboardEnabled && rec.moves > 0) s.pending = s.pending.concat([rec])
     })
     rec.localBest = isBest
-    if (hasTag && rec.moves > 0) flushPending(cb)
+    if (hasTag && leaderboardEnabled && rec.moves > 0) flushPending(cb)
     else if (cb) cb(rec, null)
     return rec
   }
@@ -118,6 +127,7 @@ Item {
   property string lastError: ""
 
   function request(method, path, body, cb) {
+    if (!leaderboardEnabled) { cb(null, "Leaderboard is off"); return }
     var xhr = new XMLHttpRequest()
     var url = apiBase + path
     xhr.open(method, url)
