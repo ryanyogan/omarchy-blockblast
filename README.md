@@ -2,6 +2,12 @@
 
 Block Blast for Omarchy. An 8x8 board, three pieces on the tray, vim keys, big combos, and a global leaderboard under a gamer tag. It launches like an app: no bar widget, nothing running when it is closed.
 
+![Blast](preview.png)
+
+Three clears, a rising combo, and a quick look at the world:
+
+![Gameplay: three line clears with a rising combo, then the leaderboard](assets/gameplay.gif)
+
 ## Install
 
 ```bash
@@ -35,6 +41,16 @@ Drop pieces anywhere they fit. Fill a row or a column and it clears. No gravity.
 **Scoring.** One point per block. A clear pays 10, two lines at once 30, three 60, four 100. Every consecutive clearing move adds one to your combo, and the combo multiplies the clear. Empty the board for 300 on top.
 
 **Commands.** `:tag NAME` claims a gamer tag. `:leaderboard off` turns off all networking, `:opacity 20-100` sets how much the background dims (`:opacity default` resets), `:motion off` stills the animations, plus `:new`, `:api URL`, `:logout`, `:q`.
+
+## Screens
+
+| A bar of five over a full row | Combo x3, mid-blast |
+|---|---|
+| ![Lining up a clear](assets/screens/hero.png) | ![A row bursting with combo x3](assets/screens/action.png) |
+
+| The world | Any theme, light or dark |
+|---|---|
+| ![Leaderboard](assets/screens/leaderboard.png) | ![Sherbet light theme](assets/screens/light.png) |
 
 ## Leaderboard
 
