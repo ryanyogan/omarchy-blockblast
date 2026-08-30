@@ -1,0 +1,26 @@
+{
+  "name": "blast-leaderboard",
+  "version": "1.0.0",
+  "description": "Leaderboard for Blast, the Omarchy block game",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc",
+    "db:local": "wrangler d1 migrations apply blast-leaderboard --local",
+    "db:remote": "wrangler d1 migrations apply blast-leaderboard --remote",
+    "test": "node test/api.test.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260830.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.127.1"
+  },
+  "private": true,
+  "allowScripts": {
+    "workerd@1.20260828.1": true
+  }
+}

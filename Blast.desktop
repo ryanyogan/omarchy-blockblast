@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Blast
+GenericName=Block puzzle
+Comment=Block Blast with vim keys and a global leaderboard
+Exec=omarchy-shell shell toggle ryanyogan.blast '{}'
+Icon=blast
+Terminal=false
+Categories=Game;LogicGame;
+Keywords=blocks;puzzle;game;vim;
+StartupNotify=false
