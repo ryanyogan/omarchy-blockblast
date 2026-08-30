@@ -77,7 +77,7 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     height: lb.ui.space(22)
-    visible: lb.entries.length > 0
+    visible: lb.enabled && lb.entries.length > 0
     Text { anchors.left: parent.left; text: "#"; font.family: lb.ui.sans; font.pixelSize: lb.ui.fontSmall; color: lb.ui.dim }
     Text { anchors.left: parent.left; anchors.leftMargin: lb.ui.space(40); text: "Player"; font.family: lb.ui.sans; font.pixelSize: lb.ui.fontSmall; color: lb.ui.dim }
     Text { anchors.right: parent.right; anchors.rightMargin: lb.ui.space(150); text: "Lines"; font.family: lb.ui.sans; font.pixelSize: lb.ui.fontSmall; color: lb.ui.dim }
