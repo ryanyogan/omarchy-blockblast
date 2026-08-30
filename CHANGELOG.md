@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- Leaderboard served from https://blockblast.yogan.dev
+- Launching from the app menu no longer leaves the shell's "Launching…" popup hanging
+
 ## 1.1.0
 
 - Leaderboard redesigned: proportional type, medals, zebra rows, period pills
