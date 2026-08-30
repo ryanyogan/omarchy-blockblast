@@ -21,6 +21,14 @@ The second line puts **Blast** in your app menu. Or bind it:
 o.bind("SUPER + CTRL + B", "Blast", "omarchy-shell shell toggle ryanyogan.blast '{}'")
 ```
 
+## Remove
+
+```bash
+omarchy plugin remove ryanyogan.blast
+rm -f ~/.local/share/applications/Blast.desktop ~/.local/share/icons/hicolor/scalable/apps/blast.svg
+rm -rf ~/.local/state/blast   # scores and settings, if you want them gone too
+```
+
 ## Play
 
 Drop pieces anywhere they fit. Fill a row or a column and it clears. No gravity. The game ends when nothing on the tray fits.
