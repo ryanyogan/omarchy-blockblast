@@ -80,18 +80,7 @@ Block colors come from the active theme's `colors.toml` (red, orange, yellow, gr
 
 ## Backend
 
-`worker/` is a Cloudflare Worker with a D1 database. Deploy your own:
-
-```bash
-cd worker
-npm install
-npx wrangler login
-./deploy.sh
-```
-
-`deploy.sh` creates the database, runs migrations, deploys, and points `Service.qml` at the new URL. Anyone can also aim the plugin at any instance with `:api https://...`.
-
-Run it locally with `npm run db:local && npm run dev`, then `:api http://localhost:8787` in the game. `npm test` runs the API suite against that.
+The leaderboard server lives in its own repo, [ryanyogan/blockblast-server](https://github.com/ryanyogan/blockblast-server): a Cloudflare Worker with a D1 database, self-hostable in three commands. Point the plugin at any instance with `:api https://...` in the game. The plugin itself never installs anything and works fully offline with `:leaderboard off`.
 
 | Route | |
 |---|---|
