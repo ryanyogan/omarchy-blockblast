@@ -115,7 +115,7 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(root.panelWidth)
-    contentHeight: panel.fittedContentHeight(column.implicitHeight + Style.space(28), Style.space(700))
+    contentHeight: panel.fittedContentHeight(column.implicitHeight + Style.space(48), Style.space(700))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -352,7 +352,8 @@ Panel {
           MouseArea { id: playArea; anchors.fill: parent; hoverEnabled: true; onClicked: root.play() }
         }
         Text {
-          anchors.horizontalCenter: parent.horizontalCenter
+          width: parent.width
+          horizontalAlignment: Text.AlignHCenter
           text: "enter play   ·   h l period   ·   r refresh   ·   esc close"
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption

@@ -1,6 +1,6 @@
 # Blast 🧱
 
-Block Blast for Omarchy. An 8x8 board, three pieces on the tray, vim keys, big combos, and a global leaderboard under a gamer tag. It launches like an app: no bar widget, nothing running when it is closed.
+Block Blast for Omarchy. An 8x8 board, three pieces on the tray, vim keys, big combos, and a global leaderboard under a gamer tag. Launch it like an app, or keep the optional bar widget: the leaderboard one click away and the game one right click away.
 
 ![Blast](preview.png)
 
@@ -15,7 +15,13 @@ omarchy plugin add https://github.com/ryanyogan/omarchy-blockblast.git --enable 
 ~/.config/omarchy/plugins/ryanyogan.blast/install.sh
 ```
 
-The second line puts **Blast** in your app menu. Or bind it:
+The second line puts **Blast** in your app menu. Want it in the bar too?
+
+```bash
+omarchy bar put ryanyogan.blast right
+```
+
+Left click drops down the leaderboard with a **Start game** button, right click launches the game straight away. The widget can also show your best score next to the icon (`omarchy bar set ryanyogan.blast showBest true`). Or bind a key:
 
 ```lua
 o.bind("SUPER + CTRL + B", "Blast", "omarchy-shell shell toggle ryanyogan.blast '{}'")
@@ -52,13 +58,15 @@ Drop pieces anywhere they fit. Fill a row or a column and it clears. No gravity.
 
 ## Screens
 
-| A bar of five over a full row | Combo x3, mid-blast |
+| A bar of five over a full row (Solitude) | Combo x3, mid-blast (Retro-82) |
 |---|---|
 | ![Lining up a clear](assets/screens/hero.png) | ![A row bursting with combo x3](assets/screens/action.png) |
 
-| The world | Any theme, light or dark |
+| The world | The bar dropdown |
 |---|---|
-| ![Leaderboard](assets/screens/leaderboard.png) | ![Sherbet light theme](assets/screens/light.png) |
+| ![Leaderboard, Solitude theme](assets/screens/leaderboard.png) | ![Bar widget dropdown](assets/screens/panel.png) |
+
+Every theme plays in its own palette — the stills above are Solitude and Retro-82; the board, tray, banners and bar icon all recolor with the theme, light or dark.
 
 ## Leaderboard
 

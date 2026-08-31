@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Bar widget: a theme-colored block cluster; left click drops down the leaderboard with a Start/Resume button, right click launches the game, `showBest` puts your best score in the bar
+- New screenshots and gameplay capture in Solitude and Retro-82
+
 ## 1.1.1
 
 - Leaderboard served from https://blockblast.yogan.dev
