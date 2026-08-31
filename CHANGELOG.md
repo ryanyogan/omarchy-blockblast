@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- The dropdown got a real design: a live miniature of your saved board with its score, block-styled podium medals and Play button, proportional type, and the world's top eight making better use of the space
+- The leaderboard server moved to its own repo, [blockblast-server](https://github.com/ryanyogan/blockblast-server) — the plugin repo is now purely the game, which also slims what `omarchy plugin add` clones
+
 ## 1.2.0
 
 - Bar widget: a theme-colored block cluster; left click drops down the leaderboard with a Start/Resume button, right click launches the game, `showBest` puts your best score in the bar
