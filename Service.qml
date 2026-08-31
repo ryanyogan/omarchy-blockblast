@@ -97,6 +97,8 @@ Item {
 
   // ---------------------------------------------------------------- game hooks
 
+  function openOverlay() { if (shell && typeof shell.toggle === "function") shell.toggle("ryanyogan.blast", "{}") }
+
   function saveGame(serialized) { update(function(s) { s.game = serialized }) }
   function clearGame() { update(function(s) { s.game = null }) }
   function setReducedMotion(on) { update(function(s) { s.reducedMotion = on === true }) }
