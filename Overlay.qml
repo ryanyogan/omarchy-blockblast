@@ -896,6 +896,7 @@ Item {
           Behavior on opacity { NumberAnimation { duration: 160 } }
           myTag: root.tag
           enabled: root.leaderboardOn
+          onPeriodPicked: root.fetchBoard()
         }
         HelpPane {
           id: helpPane

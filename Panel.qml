@@ -74,6 +74,15 @@ Panel {
   readonly property bool hasSave: !!(save && (save.moves | 0) > 0)
   readonly property var saveBoard: save && Array.isArray(save.board) ? save.board : []
 
+  // The small-caps status line under the name: your best and where it puts
+  // you. PanelHero uppercases it.
+  readonly property string heroMeta: {
+    var bits = []
+    if (root.best > 0) bits.push("Best " + Game.fmt(root.best))
+    if (root.lbOn && root.myRank > 0) bits.push("#" + root.myRank + " in the world")
+    return bits.length ? bits.join("  ·  ") : "No runs yet"
+  }
+
   property string period: "all"
   readonly property var periods: ["all", "week", "day"]
   readonly property var periodLabels: ["All time", "Week", "Today"]
@@ -120,7 +129,10 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(root.panelWidth)
-    contentHeight: panel.fittedContentHeight(column.implicitHeight + Style.space(52), Style.space(760))
+    // Column top margin + column + a gap, then the part of the flush play
+    // bar that rises above the padding it bleeds through.
+    contentHeight: panel.fittedContentHeight(
+      column.implicitHeight + Style.space(16) + playBtn.height - panel.padding, Style.space(760))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -146,66 +158,59 @@ Panel {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: Style.space(16)
+        anchors.margins: Style.space(2)
         spacing: Style.space(12)
 
-        // ---- header: logo, wordmark, best -------------------------------
+        // ---- header -----------------------------------------------------
+
+        // Same shape as the HEY plugin's header (and Hydrate's, Omaday's,
+        // Omatop's): mark, name, a small-caps status line, and an action on
+        // the trailing edge.
         Item {
+          id: heroItem
           width: parent.width
-          height: Style.space(26)
-          Row {
-            spacing: Style.space(9)
-            anchors.verticalCenter: parent.verticalCenter
-            Grid {
-              columns: 2; spacing: 2
-              anchors.verticalCenter: parent.verticalCenter
-              Repeater {
-                model: 4
-                delegate: Rectangle {
-                  required property int index
-                  width: Style.space(8); height: Style.space(8); radius: Style.space(2)
-                  color: root.blocks[[0, 2, 4, 1][index] % root.blocks.length]
-                  Rectangle {
-                    anchors { top: parent.top; left: parent.left; right: parent.right; margins: 1.5 }
-                    height: 2; radius: 1
-                    color: Qt.rgba(1, 1, 1, 0.35)
+          height: hero.implicitHeight
+
+          // Inside the Component blocks below, PanelHero's internal
+          // `id: root` shadows the panel's; state goes through this handle.
+          readonly property var blast: root
+
+          PanelHero {
+            id: hero
+            width: parent.width
+            title: "Blast"
+            meta: root.heroMeta
+            foreground: root.ink
+            fontFamily: root.mono
+            iconComponent: Component {
+              Grid {
+                columns: 2; spacing: 2.5
+                Repeater {
+                  model: 4
+                  delegate: Rectangle {
+                    required property int index
+                    readonly property color c: heroItem.blast.blocks[[0, 2, 4, 1][index] % heroItem.blast.blocks.length]
+                    width: Style.space(11); height: Style.space(11); radius: Style.space(3)
+                    color: Qt.rgba(c.r, c.g, c.b, 0.28)
+                    border.width: 1
+                    border.color: Qt.rgba(c.r, c.g, c.b, 0.95)
                   }
                 }
               }
             }
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              text: "BLAST"
-              font.family: root.mono
-              font.pixelSize: Style.font.title
-              font.weight: Font.Black
-              font.letterSpacing: 4
-              color: root.ink
-            }
-          }
-          Row {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Style.space(5)
-            visible: root.best > 0
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              text: "BEST"
-              font.family: root.sans
-              font.pixelSize: Style.font.caption
-              font.letterSpacing: 1.5
-              color: root.faint
-            }
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              text: Game.fmt(root.best)
-              font.family: root.mono
-              font.pixelSize: Style.font.subtitle
-              font.weight: Font.Bold
-              color: root.ink
+            trailingControl: Component {
+              PanelActionButton {
+                iconText: "󰑐"
+                tooltipText: "Refresh"
+                foreground: heroItem.blast.ink
+                fontFamily: heroItem.blast.mono
+                onClicked: heroItem.blast.refresh()
+              }
             }
           }
         }
+
+        PanelSeparator { width: parent.width; foreground: root.ink }
 
         // ---- the run in your pocket: live mini board + its numbers ------
         Rectangle {
@@ -232,16 +237,12 @@ Panel {
                 delegate: Rectangle {
                   required property int index
                   readonly property int v: root.saveBoard[index] || 0
+                  readonly property color c: v > 0 ? root.blocks[(v - 1) % root.blocks.length] : root.well
                   width: mini.cell; height: mini.cell
                   radius: Math.max(1.5, mini.cell * 0.22)
-                  color: v > 0 ? root.blocks[(v - 1) % root.blocks.length] : root.well
-                  Rectangle {
-                    visible: v > 0
-                    anchors { top: parent.top; left: parent.left; right: parent.right; margins: 1 }
-                    height: Math.max(1, mini.cell * 0.18)
-                    radius: height / 2
-                    color: Qt.rgba(1, 1, 1, 0.3)
-                  }
+                  color: v > 0 ? Qt.rgba(c.r, c.g, c.b, 0.28) : root.well
+                  border.width: v > 0 ? 1 : 0
+                  border.color: Qt.rgba(c.r, c.g, c.b, 0.95)
                 }
               }
             }
@@ -282,40 +283,57 @@ Panel {
           }
         }
 
-        // ---- period pills + player count --------------------------------
+        // ---- period tabs + player count ---------------------------------
+
+        // Flat text tabs: the active period wears the accent and a short
+        // rule under it. No pills, nothing filled.
         Item {
           width: parent.width
-          height: Style.space(26)
+          height: Style.space(24)
           visible: root.lbOn
           Row {
-            spacing: Style.space(6)
-            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(18)
+            anchors.bottom: parent.bottom
             Repeater {
               model: 3
-              delegate: Rectangle {
+              delegate: Item {
+                id: tab
                 required property int index
                 readonly property bool on: root.periods[index] === root.period
-                height: Style.space(25)
-                width: pt.implicitWidth + Style.space(20)
-                radius: height / 2
-                color: on ? root.accent : root.fill
-                Behavior on color { ColorAnimation { duration: 140 } }
+                width: pt.implicitWidth
+                height: Style.space(24)
                 Text {
                   id: pt
-                  anchors.centerIn: parent
+                  anchors.top: parent.top
                   text: root.periodLabels[index]
                   font.family: root.sans
                   font.pixelSize: Style.font.bodySmall
-                  font.weight: parent.on ? Font.DemiBold : Font.Medium
-                  color: parent.on ? root.onAccent : root.dim
+                  font.weight: tab.on ? Font.DemiBold : Font.Medium
+                  color: tab.on ? root.accent : tabArea.containsMouse ? root.dim : root.faint
+                  Behavior on color { ColorAnimation { duration: 140 } }
                 }
-                MouseArea { anchors.fill: parent; onClicked: { root.period = root.periods[index]; root.refresh() } }
+                Rectangle {
+                  anchors.bottom: parent.bottom
+                  width: parent.width
+                  height: 2
+                  radius: 1
+                  color: root.accent
+                  opacity: tab.on ? 1 : 0
+                  Behavior on opacity { NumberAnimation { duration: 140 } }
+                }
+                MouseArea {
+                  id: tabArea
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  onClicked: { root.period = root.periods[tab.index]; root.refresh() }
+                }
               }
             }
           }
           Text {
             anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Style.space(4)
             text: root.players > 0 ? root.players + " players" : ""
             font.family: root.sans
             font.pixelSize: Style.font.caption
@@ -326,7 +344,7 @@ Panel {
         // ---- the world --------------------------------------------------
         Item {
           width: parent.width
-          height: root.lbOn ? Math.max(root.rowH * 3, rows.implicitHeight) : Style.space(64)
+          height: root.lbOn ? Math.max(root.rowH * (skeleton.visible ? 5 : 3), rows.implicitHeight) : Style.space(64)
 
           Text {
             anchors.centerIn: parent
@@ -340,13 +358,56 @@ Panel {
             font.pixelSize: Style.font.body
             color: root.dim
           }
-          Text {
-            anchors.centerIn: parent
+          // While the world loads: ghost rows in the shape the real ones
+          // will take, breathing gently. No spinner, no text jump.
+          Column {
+            id: skeleton
+            width: parent.width
             visible: root.lbOn && root.loading && !root.entries.length
-            text: "Fetching the world…"
-            font.family: root.sans
-            font.pixelSize: Style.font.body
-            color: root.dim
+            onVisibleChanged: opacity = 1
+
+            SequentialAnimation on opacity {
+              running: skeleton.visible
+              loops: Animation.Infinite
+              NumberAnimation { from: 1; to: 0.4; duration: 650; easing.type: Easing.InOutSine }
+              NumberAnimation { from: 0.4; to: 1; duration: 650; easing.type: Easing.InOutSine }
+            }
+
+            Repeater {
+              model: 5
+              delegate: Item {
+                id: ghost
+                required property int index
+                width: skeleton.width
+                height: root.rowH
+                Rectangle {
+                  anchors.left: parent.left
+                  anchors.leftMargin: Style.space(6)
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: Style.space(21); height: width
+                  radius: Style.space(6)
+                  color: root.fill
+                }
+                Rectangle {
+                  anchors.left: parent.left
+                  anchors.leftMargin: Style.space(36)
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width * [0.42, 0.30, 0.48, 0.26, 0.36][ghost.index]
+                  height: Style.space(10)
+                  radius: Style.space(5)
+                  color: root.fill
+                }
+                Rectangle {
+                  anchors.right: parent.right
+                  anchors.rightMargin: Style.space(6)
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: Style.space(44)
+                  height: Style.space(10)
+                  radius: Style.space(5)
+                  color: root.fill
+                }
+              }
+            }
           }
           Text {
             anchors.centerIn: parent
@@ -393,22 +454,20 @@ Panel {
                   anchors.left: parent.left
                   anchors.leftMargin: Style.space(6)
                   anchors.verticalCenter: parent.verticalCenter
+                  readonly property color c: row.index === 0 ? root.blocks[2] : row.index === 1 ? root.blocks[4] : root.blocks[1]
+                  readonly property bool podium: row.index < 3
                   width: Style.space(21); height: width
                   radius: Style.space(6)
-                  color: row.index === 0 ? root.blocks[2] : row.index === 1 ? root.blocks[4] : row.index === 2 ? root.blocks[1] : "transparent"
-                  Rectangle {
-                    visible: row.index < 3
-                    anchors { top: parent.top; left: parent.left; right: parent.right; margins: 2 }
-                    height: 2.5; radius: 1.5
-                    color: Qt.rgba(1, 1, 1, 0.35)
-                  }
+                  color: podium ? Qt.rgba(c.r, c.g, c.b, 0.22) : "transparent"
+                  border.width: podium ? 1 : 0
+                  border.color: Qt.rgba(c.r, c.g, c.b, 0.95)
                   Text {
                     anchors.centerIn: parent
                     text: String((row.e.rank | 0) || row.index + 1)
                     font.family: root.sans
                     font.pixelSize: Style.font.bodySmall
                     font.weight: Font.Bold
-                    color: row.index < 3 ? "#141414" : root.faint
+                    color: medal.podium ? root.ink : root.faint
                   }
                 }
                 Text {
@@ -455,64 +514,53 @@ Panel {
           width: parent.width
           visible: root.lbOn
           elide: Text.ElideRight
-          text: root.myTag
-            ? "You are @" + root.myTag + (root.myRank ? "  ·  #" + root.myRank + " in the world" : "")
-            : "Claim a tag in the game to post runs"
+          text: root.myTag ? "You are @" + root.myTag : "Claim a tag in the game to post runs"
           font.family: root.sans
           font.pixelSize: Style.font.bodySmall
           color: root.myTag ? root.dim : root.faint
         }
 
-        Rectangle { width: parent.width; height: 1; color: root.hairline }
-
-        // ---- play: a button built like a block --------------------------
-        Rectangle {
-          id: playBtn
-          width: parent.width
-          height: Style.space(40)
-          radius: Style.space(11)
-          color: Palette.darken(root.accent, 0.14)
-
-          Rectangle {
-            anchors.fill: parent
-            anchors.bottomMargin: Math.max(2, parent.height * 0.09)
-            radius: parent.radius
-            gradient: Gradient {
-              GradientStop { position: 0.0; color: playArea.containsMouse ? Palette.lighten(root.accent, 0.14) : Palette.lighten(root.accent, 0.08) }
-              GradientStop { position: 1.0; color: root.accent }
-            }
-          }
-          Rectangle {
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            anchors.topMargin: Style.space(4)
-            anchors.leftMargin: Style.space(14)
-            anchors.rightMargin: Style.space(14)
-            height: Style.space(3)
-            radius: height / 2
-            color: Qt.rgba(1, 1, 1, 0.28)
-          }
-          Text {
-            anchors.centerIn: parent
-            anchors.verticalCenterOffset: -1
-            text: root.hasSave ? "Resume run" : "Start a game"
-            font.family: root.sans
-            font.pixelSize: Style.font.subtitle
-            font.weight: Font.Bold
-            color: root.onAccent
-          }
-          MouseArea { id: playArea; anchors.fill: parent; hoverEnabled: true; onClicked: root.play() }
-          scale: playArea.pressed ? 0.98 : 1
-          Behavior on scale { NumberAnimation { duration: 80 } }
-        }
-
         Text {
           width: parent.width
           horizontalAlignment: Text.AlignHCenter
-          text: "enter play   ·   h l period   ·   r refresh   ·   esc"
+          text: "h l period   ·   r refresh   ·   esc"
           font.family: root.sans
           font.pixelSize: Style.font.caption
           color: root.faint
         }
+      }
+
+      // ---- play: a flat bar flush with the card -------------------------
+
+      // The whole bottom of the card is the button: edge to edge, in line
+      // with the border, no chrome. It bleeds through the panel's padding
+      // and takes the card's own bottom corners.
+      Rectangle {
+        id: playBtn
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: -panel.padding
+        anchors.rightMargin: -panel.padding
+        anchors.bottomMargin: -panel.padding
+        height: Style.space(44)
+        radius: 0
+        bottomLeftRadius: Math.max(0, Style.cornerRadius - Style.space(2))
+        bottomRightRadius: Math.max(0, Style.cornerRadius - Style.space(2))
+        color: playArea.pressed ? Palette.darken(root.accent, 0.10)
+             : playArea.containsMouse ? Palette.lighten(root.accent, 0.07)
+             : root.accent
+        Behavior on color { ColorAnimation { duration: 120 } }
+
+        Text {
+          anchors.centerIn: parent
+          text: (root.hasSave ? "Resume run" : "Start a game") + "   ↵"
+          font.family: root.sans
+          font.pixelSize: Style.font.subtitle
+          font.weight: Font.Bold
+          color: root.onAccent
+        }
+        MouseArea { id: playArea; anchors.fill: parent; hoverEnabled: true; onClicked: root.play() }
       }
     }
   }

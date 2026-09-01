@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.2
+
+- The dropdown wears the same header as the other plugins: block mark, name, a small-caps status line with your best and world rank, a refresh action, and tighter margins
+- Pills are gone. Period selectors are flat text tabs with an accent rule under the active one, in the dropdown and the game, and the game tabs are clickable now
+- Blocks went holographic: a translucent pane of their own colour behind a luminous edge, flat as projected glass, replacing the candy gloss everywhere: board, tray, logos, mini board, medals. The placement ghost already spoke this language
+- Waiting on the leaderboard shows ghost rows in the shape the real ones will take, breathing gently, instead of a "Fetching" line
+- The play button is a flat accent bar flush with the card: edge to edge, in line with the border, taking the card's own bottom corners
+
 ## 1.2.1
 
 - The dropdown got a real design: a live miniature of your saved board with its score, block-styled podium medals and Play button, proportional type, and the world's top eight making better use of the space

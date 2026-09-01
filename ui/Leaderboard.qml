@@ -17,6 +17,9 @@ Item {
   property int myBest: 0
   property bool enabled: true
 
+  // A tab was clicked: the period is already set, the owner refetches.
+  signal periodPicked()
+
   readonly property var periods: ["all", "week", "day"]
   readonly property var periodLabels: ["All time", "This week", "Today"]
   readonly property int rowH: ui.space(36)
@@ -43,26 +46,42 @@ Item {
       font.letterSpacing: 3
       color: lb.ui.dim
     }
+    // Flat text tabs: the active period wears the accent and a short rule
+    // under it. Click or h/l.
     Row {
-      spacing: lb.ui.row
+      spacing: lb.ui.space(24)
       Repeater {
         model: 3
-        delegate: Rectangle {
+        delegate: Item {
+          id: tab
           required property int index
           readonly property bool on: lb.periods[index] === lb.period
-          height: lb.ui.space(30)
-          width: t.implicitWidth + lb.ui.space(24)
-          radius: height / 2
-          color: on ? lb.ui.accent : lb.ui.well
-          Behavior on color { ColorAnimation { duration: 160 } }
+          width: t.implicitWidth
+          height: lb.ui.space(28)
           Text {
             id: t
-            anchors.centerIn: parent
+            anchors.top: parent.top
             text: lb.periodLabels[index]
             font.family: lb.ui.sans
             font.pixelSize: lb.ui.fontBody
-            font.weight: parent.on ? Font.DemiBold : Font.Medium
-            color: parent.on ? lb.ui.onAccent : lb.ui.dim
+            font.weight: tab.on ? Font.DemiBold : Font.Medium
+            color: tab.on ? lb.ui.accent : tabArea.containsMouse ? lb.ui.fg : lb.ui.dim
+            Behavior on color { ColorAnimation { duration: 160 } }
+          }
+          Rectangle {
+            anchors.bottom: parent.bottom
+            width: parent.width
+            height: 2
+            radius: 1
+            color: lb.ui.accent
+            opacity: tab.on ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 160 } }
+          }
+          MouseArea {
+            id: tabArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: { lb.period = lb.periods[tab.index]; lb.scroll = 0; lb.periodPicked() }
           }
         }
       }
@@ -108,13 +127,72 @@ Item {
       font.pixelSize: lb.ui.fontSubtitle
       color: lb.ui.dim
     }
-    Text {
-      anchors.centerIn: parent
+    // While the board loads: ghost rows in the shape the real ones will
+    // take, breathing gently. No spinner, no text jump.
+    Column {
+      id: skeleton
+      width: parent.width
       visible: lb.enabled && lb.loading && !lb.entries.length
-      text: "Fetching…"
-      font.family: lb.ui.sans
-      font.pixelSize: lb.ui.fontSubtitle
-      color: lb.ui.dim
+      onVisibleChanged: opacity = 1
+
+      SequentialAnimation on opacity {
+        running: skeleton.visible
+        loops: Animation.Infinite
+        NumberAnimation { from: 1; to: 0.4; duration: 650; easing.type: Easing.InOutSine }
+        NumberAnimation { from: 0.4; to: 1; duration: 650; easing.type: Easing.InOutSine }
+      }
+
+      Repeater {
+        model: Math.min(8, lb.visibleRows)
+        delegate: Item {
+          id: ghost
+          required property int index
+          width: parent.width
+          height: lb.rowH
+          Rectangle {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: lb.ui.space(26); height: width
+            radius: width / 2
+            color: lb.ui.well
+          }
+          Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: lb.ui.space(40)
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width * [0.30, 0.22, 0.34, 0.19, 0.27, 0.24, 0.31, 0.21][ghost.index % 8]
+            height: lb.ui.space(11)
+            radius: lb.ui.space(5)
+            color: lb.ui.well
+          }
+          Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: lb.ui.space(150)
+            anchors.verticalCenter: parent.verticalCenter
+            width: lb.ui.space(30)
+            height: lb.ui.space(11)
+            radius: lb.ui.space(5)
+            color: lb.ui.well
+          }
+          Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: lb.ui.space(96)
+            anchors.verticalCenter: parent.verticalCenter
+            width: lb.ui.space(30)
+            height: lb.ui.space(11)
+            radius: lb.ui.space(5)
+            color: lb.ui.well
+          }
+          Rectangle {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: lb.ui.space(56)
+            height: lb.ui.space(11)
+            radius: lb.ui.space(5)
+            color: lb.ui.well
+          }
+        }
+      }
     }
     Text {
       anchors.centerIn: parent
@@ -159,20 +237,24 @@ Item {
             radius: lb.ui.space(8)
             color: row.mine ? lb.ui.selectedFill : (index % 2 ? lb.ui.stripe : "transparent")
           }
-          // Medal for the top three.
+          // Medal for the top three: a holographic ring in its block colour.
           Rectangle {
             id: medal
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
+            readonly property color c: row.place === 1 ? lb.ui.blocks[2] : row.place === 2 ? lb.ui.blocks[4] : lb.ui.blocks[1]
+            readonly property bool podium: row.place >= 1 && row.place <= 3
             width: lb.ui.space(26); height: width; radius: width / 2
-            color: row.place === 1 ? lb.ui.blocks[2] : row.place === 2 ? lb.ui.blocks[4] : row.place === 3 ? lb.ui.blocks[1] : "transparent"
+            color: podium ? Qt.rgba(c.r, c.g, c.b, 0.22) : "transparent"
+            border.width: podium ? 1 : 0
+            border.color: Qt.rgba(c.r, c.g, c.b, 0.95)
             Text {
               anchors.centerIn: parent
               text: String(row.place || "")
               font.family: lb.ui.sans
               font.pixelSize: lb.ui.fontBody
               font.weight: Font.DemiBold
-              color: row.place <= 3 ? "#111111" : lb.ui.dim
+              color: medal.podium ? lb.ui.fg : lb.ui.dim
             }
           }
           Text {
