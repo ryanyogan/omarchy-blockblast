@@ -58,6 +58,7 @@ Item {
     Text {
       id: big
       anchors.horizontalCenter: parent.horizontalCenter
+      textFormat: Text.PlainText
       text: Game.fmt(card.rec ? card.rec.score : 0)
       font.family: card.ui.font
       font.pixelSize: card.ui.fontHero * 1.6
@@ -71,6 +72,7 @@ Item {
       spacing: card.ui.space(6)
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
+        textFormat: Text.PlainText
         text: card.rec ? (card.rec.lines + " lines  ·  combo x" + card.rec.maxCombo + "  ·  " + card.rec.moves + " moves  ·  best " + Game.fmt(card.best)) : ""
         font.family: card.ui.sans
         font.pixelSize: card.ui.fontBody
@@ -78,6 +80,7 @@ Item {
       }
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
+        textFormat: Text.PlainText
         text: card.rankLine
         font.family: card.ui.font
         font.pixelSize: card.ui.fontSubtitle

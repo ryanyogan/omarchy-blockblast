@@ -107,6 +107,7 @@ BarWidget {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         visible: root.showBest && root.best > 0
+        textFormat: Text.PlainText
         text: Game.fmt(root.best)
         font.family: button.fontFamily
         font.pixelSize: button.fontSize

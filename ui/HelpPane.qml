@@ -120,7 +120,7 @@ Item {
       Text { text: "Animations"; font.family: help.ui.sans; font.pixelSize: help.ui.fontBody; color: help.ui.fg }
       Text { text: help.motionOn ? "on" : "off"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.motionOn ? help.ui.accent : help.ui.dim }
       Text { text: "Gamer tag"; font.family: help.ui.sans; font.pixelSize: help.ui.fontBody; color: help.ui.fg }
-      Text { text: help.tag ? "@" + help.tag : "none"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.tag ? help.ui.accent : help.ui.dim }
+      Text { textFormat: Text.PlainText; text: help.tag ? "@" + help.tag : "none"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.tag ? help.ui.accent : help.ui.dim }
       Text { text: "Background opacity"; font.family: help.ui.sans; font.pixelSize: help.ui.fontBody; color: help.ui.fg }
       Text { text: help.scrimPct + "%"; font.family: help.ui.font; font.pixelSize: help.ui.fontBody; font.weight: Font.Bold; color: help.ui.accent }
     }

@@ -36,6 +36,7 @@ Item {
         Text {
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
+          textFormat: Text.PlainText
           text: Game.fmt(r.score)
           font.family: recent.ui.font
           font.pixelSize: recent.ui.fontBody
@@ -45,6 +46,7 @@ Item {
         Text {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
+          textFormat: Text.PlainText
           text: (r.lines | 0) + " ln  ·  x" + (r.maxCombo | 0) + (r.rank ? "  ·  #" + r.rank : "") + "  ·  " + recent.ago(r.at)
           font.family: recent.ui.font
           font.pixelSize: recent.ui.fontSmall

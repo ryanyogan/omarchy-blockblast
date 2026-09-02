@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.3
+
+Security hardening pass from marketplace review, no gameplay changes:
+
+- All state-file and network I/O moved into `blast-io.py`, a single-process helper. State reads and writes walk `~/.local/state/blast` component by component with `O_NOFOLLOW`, verify ownership on the opened descriptors, force the directory to 0700, and replace the file atomically relative to the held directory fd with file and directory fsync
+- The leaderboard client refuses redirects, caps every response at 256 KB before parsing, and only talks to `https://` endpoints — `:api` and `BLAST_API` values that are not https (or http to localhost for development) are rejected and never receive the token
+- Every API response is rebuilt field by field to a fixed schema and cardinality before it is rendered or persisted; tags, tokens, errors and leaderboard entries all have hard length and range caps, and an oversized token or state object is never written to disk
+- Every dynamic `Text` sink renders as `Text.PlainText`
+- Every helper process runs under a deadline and is killed and cleaned up in full if it overruns; network requests are queued one at a time with a bounded queue
+
 ## 1.2.2
 
 - The dropdown wears the same header as the other plugins: block mark, name, a small-caps status line with your best and world rank, a refresh action, and tighter margins

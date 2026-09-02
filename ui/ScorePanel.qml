@@ -41,6 +41,7 @@ Item {
     }
     Text {
       id: scoreText
+      textFormat: Text.PlainText
       text: Game.fmt(panel.shown)
       font.family: panel.ui.font
       font.pixelSize: panel.ui.fontHero
@@ -95,6 +96,7 @@ Item {
       }
       Text {
         anchors.verticalCenter: parent.verticalCenter
+        textFormat: Text.PlainText
         text: panel.tag ? "@" + panel.tag : "no gamer tag  ·  :tag NAME"
         font.family: panel.ui.font
         font.pixelSize: panel.ui.fontSmall

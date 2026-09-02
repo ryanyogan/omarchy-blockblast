@@ -102,6 +102,7 @@ Item {
 
     Text {
       anchors.horizontalCenter: parent.horizontalCenter
+      textFormat: Text.PlainText
       text: prompt.busy ? "claiming…" : prompt.error ? prompt.error : "2 to 16 letters, numbers, _ or -   ·   enter to claim   ·   esc to skip"
       font.family: prompt.ui.font
       font.pixelSize: prompt.ui.fontSmall

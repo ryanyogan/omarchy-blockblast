@@ -264,6 +264,7 @@ Panel {
               color: root.faint
             }
             Text {
+              textFormat: Text.PlainText
               text: root.hasSave ? Game.fmt(root.save.score) : "0"
               font.family: root.mono
               font.pixelSize: Math.round(Style.font.display * 1.15)
@@ -273,6 +274,7 @@ Panel {
             Text {
               width: parent.width
               elide: Text.ElideRight
+              textFormat: Text.PlainText
               text: root.hasSave
                 ? (root.save.lines | 0) + " lines" + ((root.save.combo | 0) > 1 ? "  ·  combo x" + root.save.combo : "") + "  ·  " + (root.save.moves | 0) + " moves"
                 : "64 empty cells waiting"
@@ -334,6 +336,7 @@ Panel {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Style.space(4)
+            textFormat: Text.PlainText
             text: root.players > 0 ? root.players + " players" : ""
             font.family: root.sans
             font.pixelSize: Style.font.caption
@@ -412,6 +415,7 @@ Panel {
           Text {
             anchors.centerIn: parent
             visible: root.lbOn && !root.loading && !!root.error
+            textFormat: Text.PlainText
             text: root.error + "  ·  r to retry"
             font.family: root.sans
             font.pixelSize: Style.font.bodySmall
@@ -463,6 +467,7 @@ Panel {
                   border.color: Qt.rgba(c.r, c.g, c.b, 0.95)
                   Text {
                     anchors.centerIn: parent
+                    textFormat: Text.PlainText
                     text: String((row.e.rank | 0) || row.index + 1)
                     font.family: root.sans
                     font.pixelSize: Style.font.bodySmall
@@ -476,6 +481,7 @@ Panel {
                   anchors.right: meta.left
                   anchors.rightMargin: Style.space(8)
                   anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
                   text: String(row.e.tag || "")
                   elide: Text.ElideRight
                   font.family: root.sans
@@ -488,6 +494,7 @@ Panel {
                   anchors.right: score.left
                   anchors.rightMargin: Style.space(10)
                   anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
                   text: (row.e.lines | 0) + " ln"
                   font.family: root.sans
                   font.pixelSize: Style.font.caption
@@ -498,6 +505,7 @@ Panel {
                   anchors.right: parent.right
                   anchors.rightMargin: Style.space(6)
                   anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
                   text: Game.fmt(row.e.score || 0)
                   font.family: root.mono
                   font.pixelSize: Style.font.subtitle
@@ -514,6 +522,7 @@ Panel {
           width: parent.width
           visible: root.lbOn
           elide: Text.ElideRight
+          textFormat: Text.PlainText
           text: root.myTag ? "You are @" + root.myTag : "Claim a tag in the game to post runs"
           font.family: root.sans
           font.pixelSize: Style.font.bodySmall

@@ -200,6 +200,7 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       wrapMode: Text.WordWrap
       visible: lb.enabled && !lb.loading && !!lb.error
+      textFormat: Text.PlainText
       text: lb.error + "\nPress  r  to retry."
       lineHeight: 1.4
       font.family: lb.ui.sans
@@ -250,6 +251,7 @@ Item {
             border.color: Qt.rgba(c.r, c.g, c.b, 0.95)
             Text {
               anchors.centerIn: parent
+              textFormat: Text.PlainText
               text: String(row.place || "")
               font.family: lb.ui.sans
               font.pixelSize: lb.ui.fontBody
@@ -262,6 +264,7 @@ Item {
             anchors.leftMargin: lb.ui.space(40)
             anchors.right: linesT.left
             anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
             text: String(row.e.tag || "")
             elide: Text.ElideRight
             font.family: lb.ui.sans
@@ -274,6 +277,7 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: lb.ui.space(150)
             anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
             text: String(row.e.lines | 0)
             font.family: lb.ui.sans
             font.pixelSize: lb.ui.fontBody
@@ -283,6 +287,7 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: lb.ui.space(96)
             anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
             text: "x" + (row.e.maxCombo | 0)
             font.family: lb.ui.sans
             font.pixelSize: lb.ui.fontBody
@@ -291,6 +296,7 @@ Item {
           Text {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
             text: Game.fmt(row.e.score || 0)
             font.family: lb.ui.sans
             font.pixelSize: lb.ui.fontSubtitle
@@ -312,6 +318,7 @@ Item {
     Item { width: 1; height: lb.ui.space(2) }
     Text {
       width: parent.width
+      textFormat: Text.PlainText
       text: !lb.enabled ? "Nothing is sent while it is off."
         : lb.myTag ? "You are @" + lb.myTag + (lb.myRank ? "   ·   #" + lb.myRank + " all time   ·   best " + Game.fmt(lb.myBest) : "")
         : "Claim a gamer tag to post runs:  :tag NAME"
@@ -322,6 +329,7 @@ Item {
     }
     Text {
       visible: lb.enabled
+      textFormat: Text.PlainText
       text: lb.players + " players   ·   " + lb.games + " games"
       font.family: lb.ui.sans
       font.pixelSize: lb.ui.fontSmall

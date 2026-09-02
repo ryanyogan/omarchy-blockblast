@@ -413,7 +413,7 @@ Item {
       return
     }
     case "api":
-      if (service) service.setApiBase(arg)
+      if (service && !service.setApiBase(arg)) { showToast("Only https URLs are allowed (http for localhost)", true); return }
       showToast(arg ? "API: " + arg : "API reset to default", false); return
     case "help": case "h": case "keys": pane = "help"; return
     case "board": case "top": case "lb": case "scores": openBoard(); return
@@ -687,6 +687,7 @@ Item {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
           text: (root.tag && root.leaderboardOn ? "@" + root.tag + "   ·   " : "") + (root.leaderboardOn ? "t leaderboard   ·   " : "offline   ·   ") + "? help"
+          textFormat: Text.PlainText
           font.family: root.ui.font
           font.pixelSize: root.ui.fontSmall
           color: root.ui.dim
@@ -977,6 +978,7 @@ Item {
             : root.pane === "help" ? "j k scroll   ·   gg G top / bottom   ·   esc back"
             : root.pane === "intro" ? "enter to play   ·   ? for help"
             : "hjkl move   ·   1 2 3 pick   ·   w b cycle   ·   enter drop   ·   n new   ·   : command"
+          textFormat: Text.PlainText
           font.family: root.ui.font
           font.pixelSize: root.ui.fontSmall
           font.weight: root.toast ? Font.Bold : Font.Normal
