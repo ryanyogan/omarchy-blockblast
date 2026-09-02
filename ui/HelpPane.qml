@@ -39,6 +39,7 @@ Item {
     [":opacity 20-100", "background dimming behind the game (:opacity default resets)"],
     [":logout", "forget the tag on this machine"],
     [":api URL", "point at a different leaderboard server"],
+    [":save", "write the save file now (a failed save retries on its own)"],
     [":new", "start over"],
     [":q", "quit"]
   ]

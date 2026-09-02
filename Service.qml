@@ -364,22 +364,45 @@ Item {
   property bool dead: false
   property bool saveQueued: false
   Timer { id: saveDebounce; interval: 150; onTriggered: root.saveState() }
-  function saveSoon() { if (stateLoaded) saveDebounce.restart() }
+  function saveSoon() {
+    if (!stateLoaded) return
+    // A fresh change after automatic retries gave up earns a fresh series.
+    if (saveAttempts >= maxSaveAttempts) saveAttempts = 0
+    saveDebounce.restart()
+  }
+
+  // Why the last read or write failed, or "". Both are surfaced by the
+  // overlay. While saveError is set the in-memory state is newer than the
+  // disk, so refresh() retries the write instead of reloading over it.
+  property string loadError: ""
+  property string saveError: ""
+
+  // Write now, whatever the retry schedule says. Used by :save.
+  function saveNow() { saveRetry.stop(); saveDebounce.stop(); saveState() }
 
   Process {
     id: stateReader
     running: false
-    onExited: readDeadline.stop()
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        var parsed = null
-        try { parsed = text.trim() === "" ? null : JSON.parse(text) } catch (e) { parsed = null }
-        root.state = root.normalize(parsed)
-        root.stateLoaded = true
+    stdout: StdioCollector { id: readOut; waitForEnd: true }
+    stderr: StdioCollector { id: readErr; waitForEnd: true }
+    onExited: function(code, status) {
+      readDeadline.stop()
+      if (code !== 0 || status !== 0) {
+        // The file exists but the helper would not vouch for it (wrong
+        // owner, not a regular file, too large, or the read overran). Play
+        // from defaults without saving so the file is never replaced blind.
+        root.loadError = root.capStr(String(readErr.text || "").trim(), 120) || "Could not read the save"
+        root.state = root.normalize(null)
+        root.stateLoaded = false
+        return
       }
+      var parsed = null
+      var text = readOut.text || ""
+      try { parsed = text.trim() === "" ? null : JSON.parse(text) } catch (e) { parsed = null }
+      root.state = root.normalize(parsed)
+      root.loadError = ""
+      root.stateLoaded = true
     }
-    stderr: StdioCollector { waitForEnd: true }
   }
   Timer { id: readDeadline; interval: 6000; onTriggered: stateReader.running = false }
 
@@ -387,6 +410,7 @@ Item {
   // edited or synced from elsewhere is what you resume.
   function refresh() {
     if (stateReader.running || stateWriter.running || saveDebounce.running) return
+    if (saveError !== "" || saveRetry.running) { saveNow(); return }
     stateLoaded = false
     loadState()
   }
@@ -398,13 +422,33 @@ Item {
     stateReader.running = true
   }
 
+  // A failed write is retried on its own a bounded number of times, backing
+  // off 1s, 3s, 9s, 27s. After that the state stays in memory, saveError
+  // stays set, and the next change, overlay open, or :save tries again.
+  property int saveAttempts: 0
+  readonly property int maxSaveAttempts: 5
+  Timer { id: saveRetry; onTriggered: root.saveState() }
+
   Process {
     id: stateWriter
     running: false
-    stderr: StdioCollector { waitForEnd: true }
+    stderr: StdioCollector { id: writeErr; waitForEnd: true }
     onExited: function(code, status) {
       writeDeadline.stop()
-      if (root.saveQueued) { root.saveQueued = false; root.saveState() }
+      if (code === 0 && status === 0) {
+        root.saveAttempts = 0
+        root.saveError = ""
+        if (root.saveQueued) { root.saveQueued = false; root.saveState() }
+        return
+      }
+      root.saveQueued = false
+      root.saveAttempts += 1
+      var why = root.capStr(String(writeErr.text || "").trim(), 120)
+      root.saveError = why || (status !== 0 ? "The save helper was stopped" : "Save failed (exit " + code + ")")
+      if (root.saveAttempts < root.maxSaveAttempts && !root.dead) {
+        saveRetry.interval = 1000 * Math.pow(3, root.saveAttempts - 1)
+        saveRetry.restart()
+      }
     }
   }
   Timer { id: writeDeadline; interval: 6000; onTriggered: stateWriter.running = false }
@@ -423,7 +467,7 @@ Item {
       slim.history = slim.history.slice(0, 10)
       slim.pending = slim.pending.slice(0, 5)
       json = JSON.stringify(slim)
-      if (json.length > maxStateBytes) return
+      if (json.length > maxStateBytes) { saveError = "The save is too large to write"; return }
     }
     stateWriter.environment = ({ BLAST_STATE: json })
     stateWriter.command = ["/usr/bin/python3", ioHelper, "write"]

@@ -47,6 +47,19 @@ Item {
 
   readonly property bool reducedMotion: service ? service.reducedMotion === true : false
 
+  // A save that did not land is never silent: the service retries on its
+  // own, the footer says "unsaved" until it succeeds, and :save forces it.
+  Connections {
+    target: root.service
+    function onSaveErrorChanged() {
+      if (root.service.saveError) root.showToast("Could not save: " + root.service.saveError + ". Retrying, or :save", true)
+      else if (root.opened) root.showToast("Saved", false)
+    }
+    function onLoadErrorChanged() {
+      if (root.service.loadError) root.showToast("Could not read your save: " + root.service.loadError + ". Playing without saving", true)
+    }
+  }
+
   // Ambient motion (the ghost's breathing, the tray bob, the clear pulse)
   // runs only in the seconds after input. After that the scene goes still and
   // the shell stops burning frames on a game nobody is touching.
@@ -415,6 +428,9 @@ Item {
     case "api":
       if (service && !service.setApiBase(arg)) { showToast("Only https URLs are allowed (http for localhost)", true); return }
       showToast(arg ? "API: " + arg : "API reset to default", false); return
+    case "save": case "w":
+      if (service) { service.saveNow(); showToast("Saving", false) }
+      return
     case "help": case "h": case "keys": pane = "help"; return
     case "board": case "top": case "lb": case "scores": openBoard(); return
     case "resume": case "play": pane = basePane(); return
@@ -555,7 +571,7 @@ Item {
   Timer {
     id: waitForState
     interval: 40; repeat: true
-    onTriggered: if (root.service && root.service.stateLoaded) { stop(); root.startGame(true) }
+    onTriggered: if (root.service && (root.service.stateLoaded || root.service.loadError)) { stop(); root.startGame(true) }
   }
 
   function close() {
@@ -686,11 +702,12 @@ Item {
         Text {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
-          text: (root.tag && root.leaderboardOn ? "@" + root.tag + "   ·   " : "") + (root.leaderboardOn ? "t leaderboard   ·   " : "offline   ·   ") + "? help"
+          readonly property bool unsaved: root.service ? root.service.saveError !== "" || root.service.loadError !== "" : false
+          text: (unsaved ? "unsaved   ·   " : "") + (root.tag && root.leaderboardOn ? "@" + root.tag + "   ·   " : "") + (root.leaderboardOn ? "t leaderboard   ·   " : "offline   ·   ") + "? help"
           textFormat: Text.PlainText
           font.family: root.ui.font
           font.pixelSize: root.ui.fontSmall
-          color: root.ui.dim
+          color: unsaved ? root.ui.urgent : root.ui.dim
         }
       }
 

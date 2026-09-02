@@ -1,11 +1,20 @@
 # Changelog
 
+## 1.2.4
+
+Second hardening pass from marketplace review, no gameplay changes:
+
+- `install.sh` no longer copies by pathname. The desktop entry and icon are published by `blast-io.py`, which walks every directory under `$HOME` without following symlinks, checks each one is yours, creates missing ones itself, refuses to replace anything at the destination that is not a plain file you own, and writes each file to a temp name, fsyncs it, and renames it into place. A crash mid-install leaves either the old file or the new one
+- A failed save is no longer treated as a success. The service checks the helper's exit status, keeps the newer state in memory, retries on its own a bounded number of times (1s, 3s, 9s, 27s), and then leaves it to the next change, the next open, or `:save`. The overlay shows the reason and an `unsaved` marker in the footer until the write lands, and opening the game never reloads the disk over unsaved changes, so `:leaderboard off` and `:forget` cannot quietly revert
+- A save file the helper refuses to read (wrong owner, not a regular file, too large) is reported and the game plays from defaults without ever writing over it
+- `:save` command, and `test/io.test.py` covers the helper's install, write, and refusal paths
+
 ## 1.2.3
 
 Security hardening pass from marketplace review, no gameplay changes:
 
 - All state-file and network I/O moved into `blast-io.py`, a single-process helper. State reads and writes walk `~/.local/state/blast` component by component with `O_NOFOLLOW`, verify ownership on the opened descriptors, force the directory to 0700, and replace the file atomically relative to the held directory fd with file and directory fsync
-- The leaderboard client refuses redirects, caps every response at 256 KB before parsing, and only talks to `https://` endpoints — `:api` and `BLAST_API` values that are not https (or http to localhost for development) are rejected and never receive the token
+- The leaderboard client refuses redirects, caps every response at 256 KB before parsing, and only talks to `https://` endpoints: `:api` and `BLAST_API` values that are not https (or http to localhost for development) are rejected and never receive the token
 - Every API response is rebuilt field by field to a fixed schema and cardinality before it is rendered or persisted; tags, tokens, errors and leaderboard entries all have hard length and range caps, and an oversized token or state object is never written to disk
 - Every dynamic `Text` sink renders as `Text.PlainText`
 - Every helper process runs under a deadline and is killed and cleaned up in full if it overruns; network requests are queued one at a time with a bounded queue
@@ -21,7 +30,7 @@ Security hardening pass from marketplace review, no gameplay changes:
 ## 1.2.1
 
 - The dropdown got a real design: a live miniature of your saved board with its score, block-styled podium medals and Play button, proportional type, and the world's top eight making better use of the space
-- The leaderboard server moved to its own repo, [blockblast-server](https://github.com/ryanyogan/blockblast-server) — the plugin repo is now purely the game, which also slims what `omarchy plugin add` clones
+- The leaderboard server moved to its own repo, [blockblast-server](https://github.com/ryanyogan/blockblast-server), so the plugin repo is now purely the game, which also slims what `omarchy plugin add` clones
 
 ## 1.2.0
 

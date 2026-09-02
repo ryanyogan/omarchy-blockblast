@@ -15,7 +15,7 @@ omarchy plugin add https://github.com/ryanyogan/omarchy-blockblast.git --enable 
 ~/.config/omarchy/plugins/ryanyogan.blast/install.sh
 ```
 
-The second line puts **Blast** in your app menu. Want it in the bar too?
+The second line puts **Blast** in your app menu. It writes exactly two files, `~/.local/share/applications/Blast.desktop` and `~/.local/share/icons/hicolor/scalable/apps/blast.svg`, atomically, and refuses to replace anything there that is not a plain file you own. Want it in the bar too?
 
 ```bash
 omarchy bar put ryanyogan.blast right
@@ -98,7 +98,7 @@ Closed, Blast does not exist: the shell unloads the overlay and the service hold
 
 ## Development
 
-The game rules are in `Game.js` with no QML in them; `node test/game.test.js` runs them under node. State lives in `~/.local/state/blast/blast.json`. The shell's hot reload does not always pick up a symlinked plugin, so `omarchy-restart-shell` after edits.
+The game rules are in `Game.js` with no QML in them; `node test/game.test.js` runs them under node. `python3 test/io.test.py` exercises `blast-io.py` (state file, install, refusals) against a throwaway `$HOME`. State lives in `~/.local/state/blast/blast.json`. The shell's hot reload does not always pick up a symlinked plugin, so `omarchy-restart-shell` after edits.
 
 ## License
 
