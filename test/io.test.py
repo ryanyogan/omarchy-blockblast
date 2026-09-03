@@ -107,6 +107,9 @@ def test_install():
         check("install: files are 0644", stat.S_IMODE(os.lstat(desktop).st_mode) == 0o644 and stat.S_IMODE(os.lstat(icon).st_mode) == 0o644)
         check("install: created directories are 0755", stat.S_IMODE(os.lstat(os.path.dirname(desktop)).st_mode) == 0o755)
         check("install: prints the two published paths", r.stdout.count(b"\n") == 2)
+        execs = [l for l in want_desktop.decode().splitlines() if l.startswith("Exec=")]
+        check("desktop entry: one Exec line, absolute, no shell",
+              len(execs) == 1 and execs[0].startswith("Exec=/usr/bin/omarchy-shell ") and " sh " not in execs[0] and "sh -c" not in execs[0])
         r = run(["install"], home)
         check("install: rerun is a no-op success", r.returncode == 0 and open(desktop, "rb").read() == want_desktop)
         leftovers = [f for f in os.listdir(os.path.dirname(desktop)) if f.endswith(".tmp")]

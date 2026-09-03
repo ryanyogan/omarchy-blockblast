@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.5
+
+Third hardening pass from marketplace review, no gameplay changes:
+
+- `Blast.desktop` runs one fixed-path command, `/usr/bin/omarchy-shell`, with no shell in between. Dismissing the shell's "Launching…" feedback moved into the overlay, which now gets a `launcher` flag from the app menu entry
+- `install.sh` no longer calls `update-desktop-database` or `gtk-update-icon-cache`: the app menu watches the directory itself, so the installer touches exactly the two files it publishes and nothing else, and runs no command found through `PATH`
+- `test/io.test.py` checks the desktop entry's `Exec` line stays absolute and shell-free
+
 ## 1.2.4
 
 Second hardening pass from marketplace review, no gameplay changes:

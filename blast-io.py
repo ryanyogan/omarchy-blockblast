@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # Blast's I/O helper. The QML service shells out here for the only two kinds
 # of I/O the plugin does: the state file and the leaderboard API. install.sh
 # uses the same code to publish the desktop entry and icon. Keeping all of it

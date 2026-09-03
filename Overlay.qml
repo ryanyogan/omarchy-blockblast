@@ -566,7 +566,16 @@ Item {
     }
     if (payload.pane === "board") openBoard()
     if (payload.pane === "help") pane = "help"
+    if (payload.launcher === true) launchFeedback.restart()
     Qt.callLater(function() { if (root.opened) content.forceActiveFocus() })
+  }
+  // Opened from the app menu: the shell shows "Launching…" two seconds after
+  // any launch and only a new window would dismiss it, which an overlay
+  // never is. Close it just after it appears. Harmless when nothing is open.
+  Timer {
+    id: launchFeedback
+    interval: 2600
+    onTriggered: Quickshell.execDetached(["/usr/bin/omarchy-shell", "osd", "close"])
   }
   Timer {
     id: waitForState
